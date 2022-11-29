@@ -1,4 +1,4 @@
-import goldeneye
+from goldeneye import goldeneye
 import sys
 import os
 import bz2
@@ -588,9 +588,9 @@ class num_sys_transform(object):
         self.signed = signed
         self.qsigned = qsigned
         self.bits = bits
-        R_quantize_signed = R_quantize_signed
-        R_quantize_unsigned = R_quantize_unsigned
-        precision = precision
+        self.R_quantize_signed = R_quantize_signed
+        self.R_quantize_unsigned = R_quantize_unsigned
+        self.precision = precision
 
     def __call__(self, tensor):
         return goldeneye.transform_numsys(tensor, self.num_sys, self.quant, self.signed, self.qsigned, self.bits, self.R_quantize_signed, self.R_quantize_unsigned, self.precision)
@@ -601,6 +601,8 @@ class num_sys_transform(object):
 
 def load_id_custom_dataset(DATASET, BATCH_SIZE, norm_mean, norm_std, dataset_path, dataset_percentage=100, workers=0,
                            training=False, shuffleIn=False, include_id=True):
+
+    # fetch num format configuration
     if getFormat() == "INT":
         quant_en = True
         bitwidth_fp = 32
@@ -615,13 +617,9 @@ def load_id_custom_dataset(DATASET, BATCH_SIZE, norm_mean, norm_std, dataset_pat
                                     radix_up=exp_bits,
                                     radix_down=mantissa_bits,
                                     bias=getBias())
+    bits = bitwidth_in
 
-    # for simulated number system
-    (num_sys_format, num_sys_name) = num_sys_config
-    signed = kwargs.get("signed", True)
-    # for quantization
-    qsigned = kwargs.get("qsigned", True)
-    bits = kwargs.get("bits", 8)
+    # transform pipeline
     transform_list = [
         transforms.ToTensor(),
     ]
@@ -629,7 +627,7 @@ def load_id_custom_dataset(DATASET, BATCH_SIZE, norm_mean, norm_std, dataset_pat
     if norm_mean:  # not all datasets are to be normalized
         transform_list.append(transforms.Normalize(norm_mean, norm_std))
 
-    transform_list.append(num_sys_transform(num_sys, quant_en, signed, qsigned, bits))
+    transform_list.append(num_sys_transform(num_sys_config, quant_en, signed=True, qsigned=getQSigned(), bits=bits))
     transform = transforms.Compose(transform_list)
 
     if include_id:

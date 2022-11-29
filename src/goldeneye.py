@@ -66,7 +66,7 @@ class goldeneye(core.fault_injection):
                 tensor[:] = goldeneye.quantizeSigned_INPLACE(precision, tensor, bits, R=R_quantize_signed)
             else:
                 tensor[:] = goldeneye.quantizeUnsigned(precision, tensor, bits, R=R_quantize_unsigned)
-
+        return tensor
 
     def set_layer_max(self, data):
         self.LayerRanges = data
