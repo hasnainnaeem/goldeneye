@@ -382,7 +382,7 @@ def getNumClasses(dataset):
 def getNetwork(networkName, DATASET):
     ####### IMAGENET #######
     FB_repo = 'facebookresearch/deit:main'
-    if "custom" in DATASET.lower():  # covers CIFAR100 and custom cifar10, cifar100 datasets
+    if "custom" in DATASET.lower():  # covers custom cifar10, cifar100 datasets
         if networkName == "resnet18":
             MODEL = resnet.resnet18(pretrained=True)
         elif networkName == "resnet34":
@@ -582,10 +582,9 @@ def load_dataset(DATASET, BATCH_SIZE, workers=0, training=False, shuffleIn=False
 
 
 class num_sys_transform(object):
-    def __init__(self,  num_sys, quant, signed, qsigned, bits, R_quantize_signed=2, R_quantize_unsigned=1, precision="FP32"):
+    def __init__(self,  num_sys, quant, qsigned, bits, R_quantize_signed=2, R_quantize_unsigned=1, precision="FP32"):
         self.num_sys = num_sys
         self.quant = quant
-        self.signed = signed
         self.qsigned = qsigned
         self.bits = bits
         self.R_quantize_signed = R_quantize_signed
@@ -593,7 +592,7 @@ class num_sys_transform(object):
         self.precision = precision
 
     def __call__(self, tensor):
-        return goldeneye.transform_numsys(tensor, self.num_sys, self.quant, self.signed, self.qsigned, self.bits, self.R_quantize_signed, self.R_quantize_unsigned, self.precision)
+        return goldeneye.transform_numsys(tensor, self.num_sys, self.quant, self.qsigned, self.bits, self.R_quantize_signed, self.R_quantize_unsigned, self.precision)
 
     def __repr__(self):
         return self.__class__.__name__ + '()'
@@ -627,7 +626,9 @@ def load_id_custom_dataset(DATASET, BATCH_SIZE, norm_mean, norm_std, dataset_pat
     if norm_mean:  # not all datasets are to be normalized
         transform_list.append(transforms.Normalize(norm_mean, norm_std))
 
-    transform_list.append(num_sys_transform(num_sys_config, quant_en, signed=True, qsigned=getQSigned(), bits=bits))
+    data_R_quantize_signed = 2
+    data_R_quantize_unsigned = 1
+    transform_list.append(num_sys_transform(num_sys_config, quant_en, qsigned=getQSigned(), bits=bits, R_quantize_signed=data_R_quantize_signed, R_quantize_unsigned=data_R_quantize_unsigned, precision=getPrecision()))
     transform = transforms.Compose(transform_list)
 
     if include_id:

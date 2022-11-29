@@ -32,8 +32,6 @@ def gather_min_max_per_layer(model, data_iter, batch_size, precision="FP16", cud
     processed_elements = 0
     batch_num = 0
 
-    print("aright, here's info related to my type:")
-    print(type(data_iter))
     for input_data in tqdm(data_iter):
 
         # prepare the next batch for inference
